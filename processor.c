@@ -2,7 +2,7 @@
 * Filename: procesor.c
 * Description: multiprocessing lab
 * Author: Andrew Keenan
-* Date: 11-22-24
+* Date: 11-22-24 
 * Note: Processor for the image using methods I copied over from Mandel 
 *****************************************************************************/
 #include "jpegrw.h"

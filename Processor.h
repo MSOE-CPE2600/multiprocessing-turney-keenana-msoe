@@ -2,7 +2,7 @@
 * Filename: processor.h
 * Description: multiprocessing lab
 * Author: Andrew Keenan
-* Date: 11-22-24
+* Date: 11-22-24 
 * Note: Header file for mandel processes that I copied over
 *****************************************************************************/
 #include "jpegrw.h"
