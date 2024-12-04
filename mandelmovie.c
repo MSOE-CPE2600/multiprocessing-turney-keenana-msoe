@@ -18,14 +18,19 @@
 
 int main(int argc, char *argv[]) {
     int processes;
+    int threads;
     char c;
     sem_t *sem;
     // argument parsing to find number of child processes
-    while ((c = getopt(argc, argv, "p:")) != -1) {
+    while ((c = getopt(argc, argv, "p:t:")) != -1) {
         switch (c) {
             case 'p':
                 processes = atoi(optarg);
-                printf("processes : %d", processes);
+                printf("processes : %d\n", processes);
+                break;
+            case 't':
+                threads = atoi(optarg);
+                printf("Threads: %d\n", threads);
                 break;
             default:
                 printf("Error recognizing number of processes: try -p <NUM>\n");
@@ -68,7 +73,7 @@ int main(int argc, char *argv[]) {
             setImageCOLOR(img, 0);
             // create the image using mandel processes
             compute_image(img, xcenter - xscale / 2, xcenter + xscale / 2,
-                          ycenter - yscale / 2, ycenter + yscale / 2, max_iter);
+                          ycenter - yscale / 2, ycenter + yscale / 2, max_iter, threads);
             // save the image to a file
             storeJpegImageFile(img, filename);
             // cleanup image
