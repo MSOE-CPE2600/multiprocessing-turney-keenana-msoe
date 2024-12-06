@@ -8,6 +8,16 @@
 #include "jpegrw.h"
 #include <pthread.h>
 #include <stdlib.h>
+typedef struct {
+	imgRawImage *img;
+	double xmin;
+	double xmax;
+	double ymin;
+	double ymax;
+	int max;
+	int start;
+	int end;
+} args;
 /*
 Return the number of iterations at point x, y
 in the Mandelbrot space, up to a maximum of max.
@@ -44,6 +54,38 @@ int iteration_to_color( int iters, int max )
 	return color;
 }
 
+void *compute_rows(void *input) {
+	// cast args to data
+	args *values = (args*)input;
+	// pull out raw img
+	imgRawImage *img = values->img;
+	int width = img->width;
+	int height = img->height;
+	// pull out other data into variables
+	double xmin = values->xmin;
+	double xmax = values->xmax;
+	double ymin = values->ymin;
+	double ymax = values->ymax;
+	int max = values->max;
+
+	for(int j= values->start;j<values->end;j++) {
+
+		for(int i=0;i<width;i++) {
+
+			// Determine the point in x,y space for that pixel.
+			double x = xmin + i*(xmax-xmin)/width;
+			double y = ymin + j*(ymax-ymin)/height;
+
+			// Compute the iterations at that point.
+			int iters = iterations_at_point(x,y,max);
+
+			// Set the pixel in the bitmap.
+			setPixelCOLOR(img,i,j,iteration_to_color(iters,max));
+		}
+	}
+	return NULL;
+}
+
 /*
 Compute an entire Mandelbrot image, writing each point to the given bitmap.
 Scale the image to the range (xmin-xmax,ymin-ymax), limiting iterations to "max"
@@ -54,7 +96,6 @@ void compute_image(imgRawImage* img, double xmin, double xmax, double ymin, doub
 	pthread_t pthreads[threads];
 	args data[threads];
 	// setup image parameters 
-	int width = img->width;
 	int height = img->height;
     int num_rows = height / threads;
     int leftover = height % threads;
@@ -75,7 +116,7 @@ void compute_image(imgRawImage* img, double xmin, double xmax, double ymin, doub
 			data[i].end += leftover; 
 		}
 		// create the thread
-		phread_create(&pthreads[i], NULL, compute_rows, (void*)%data);
+		pthread_create(&pthreads[i], NULL, compute_rows, (void*)&data[i]);
 	}
 	// wait for all threads to complete
 	for (int i = 0; i < threads; i++) {
@@ -83,33 +124,3 @@ void compute_image(imgRawImage* img, double xmin, double xmax, double ymin, doub
 	}
 }
 
-void *compute_rows(void *args) {
-	// cast args to data
-	args *data = (args*)args;
-	// pull out raw img
-	imgRawImage *img = data->img;
-	int width = img->width;
-	int height = img->height;
-	// pull out other data into variables
-	double xmin = data->xmin;
-	double xmax = data->xmax;
-	double ymin = data->ymin;
-	double ymax = data->ymax;
-	int max = data->max;
-
-	for(int j= data->start;j<data->end;j++) {
-
-		for(int i=0;i<width;i++) {
-
-			// Determine the point in x,y space for that pixel.
-			double x = xmin + i*(xmax-xmin)/width;
-			double y = ymin + j*(ymax-ymin)/height;
-
-			// Compute the iterations at that point.
-			int iters = iterations_at_point(x,y,max);
-
-			// Set the pixel in the bitmap.
-			setPixelCOLOR(img,i,j,iteration_to_color(iters,max));
-		}
-	}
-}
